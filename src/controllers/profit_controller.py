@@ -1,11 +1,8 @@
 import pickle
-from typing import List
 
 from src.core.file import file_name
 from src.models.profit import Profit
-
-
-FILE_DATA = file_name()
+from src.utils.profits import calculate_profits
 
 
 class ProfitController:
@@ -15,13 +12,27 @@ class ProfitController:
         if any(p.name.lower() == profit.name.lower() for p in existing_profits):
             raise ValueError(f"Profit with name {profit.name} already exists.")
 
-        with open(FILE_DATA, "ab") as file:
+        after_fees, calculated_profit = calculate_profits(
+            profit.price_sale, profit.price_cost, profit.fees
+        )
+        profit = profit.model_copy(
+            update={"after_fees": after_fees, "profit": calculated_profit}
+        )
+
+        with open(file_name(), "ab") as file:
             pickle.dump(profit, file)
         return profit
 
-    def read(id: str | None = None, name: str | None = None) -> List[Profit] | list[Profit]:
-        with open(FILE_DATA, "rb") as file:
-            profits = []
+    def read(
+        self, id: str | None = None, name: str | None = None
+    ) -> list[Profit]:
+        profits: list[Profit] = []
+        try:
+            file = open(file_name(), "rb")
+        except FileNotFoundError:
+            return profits
+
+        with file:
             while True:
                 try:
                     profit = pickle.load(file)
@@ -35,27 +46,45 @@ class ProfitController:
         return profits
 
     def update(self, id: str, profit: Profit) -> Profit:
-        data = self.read(id=id)
+        profits = self.read()
+        existing = next((item for item in profits if item.id == id), None)
 
-        if not data:
+        if existing is None:
             raise ValueError(f"Profit with id {id} not found.")
 
-        data.update(profit.model_dump())
+        if any(
+            item.id != id and item.name.lower() == profit.name.lower()
+            for item in profits
+        ):
+            raise ValueError(f"Profit with name {profit.name} already exists.")
 
-        self.delete(id)
+        after_fees, calculated_profit = calculate_profits(
+            profit.price_sale, profit.price_cost, profit.fees
+        )
+        updated_profit = profit.model_copy(
+            update={
+                "id": id,
+                "after_fees": after_fees,
+                "profit": calculated_profit,
+            }
+        )
+        updated_profits = [
+            updated_profit if item.id == id else item for item in profits
+        ]
 
-        with open(FILE_DATA, "ab") as file:
-            pickle.dump(data, file)
-        
-        return profit
+        with open(file_name(), "wb") as file:
+            for item in updated_profits:
+                pickle.dump(item, file)
+
+        return updated_profit
 
     def delete(self, id: str) -> None:
         profits = self.read()
         updated_profits = [p for p in profits if p.id != id]
 
-        if not updated_profits:
+        if len(updated_profits) == len(profits):
             raise ValueError(f"Profit with id {id} not found.")
 
-        with open(FILE_DATA, "wb") as file:
+        with open(file_name(), "wb") as file:
             for p in updated_profits:
                 pickle.dump(p, file)
