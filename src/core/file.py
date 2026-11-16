@@ -8,6 +8,6 @@ def file_name() -> str:
     file = environ.get("FILE_DATA", None)
 
     if file is None:
-        raise ValueError("FILE_DATA environment variable is not set.")
+        raise ValueError("A variável de ambiente FILE_DATA não está configurada.")
     
     return file

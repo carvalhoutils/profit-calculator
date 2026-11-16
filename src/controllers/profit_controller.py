@@ -10,7 +10,7 @@ class ProfitController:
         existing_profits = self.read()
 
         if any(p.name.lower() == profit.name.lower() for p in existing_profits):
-            raise ValueError(f"Profit with name {profit.name} already exists.")
+            raise ValueError(f"Já existe um profit com o nome '{profit.name}'.")
 
         after_fees, calculated_profit = calculate_profits(
             profit.price_sale, profit.price_cost, profit.fees
@@ -50,13 +50,13 @@ class ProfitController:
         existing = next((item for item in profits if item.id == id), None)
 
         if existing is None:
-            raise ValueError(f"Profit with id {id} not found.")
+            raise ValueError(f"Não foi encontrado um profit com o ID {id}.")
 
         if any(
             item.id != id and item.name.lower() == profit.name.lower()
             for item in profits
         ):
-            raise ValueError(f"Profit with name {profit.name} already exists.")
+            raise ValueError(f"Já existe um profit com o nome '{profit.name}'.")
 
         after_fees, calculated_profit = calculate_profits(
             profit.price_sale, profit.price_cost, profit.fees
@@ -83,7 +83,7 @@ class ProfitController:
         updated_profits = [p for p in profits if p.id != id]
 
         if len(updated_profits) == len(profits):
-            raise ValueError(f"Profit with id {id} not found.")
+            raise ValueError(f"Não foi encontrado um profit com o ID {id}.")
 
         with open(file_name(), "wb") as file:
             for p in updated_profits:
