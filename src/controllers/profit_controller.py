@@ -35,20 +35,18 @@ class ProfitController:
         return profits
 
     def update(self, id: str, profit: Profit) -> Profit:
-        profits = self.read()
-        updated_profits = []
-        for p in profits:
-            if p.id == id:
-                updated_profits.append(profit)
-            else:
-                updated_profits.append(p)
+        data = self.read(id=id)
 
-        if not updated_profits:
+        if not data:
             raise ValueError(f"Profit with id {id} not found.")
+
+        data.update(profit.model_dump())
+
+        self.delete(id)
+
+        with open(FILE_DATA, "ab") as file:
+            pickle.dump(data, file)
         
-        with open(FILE_DATA, "wb") as file:
-            for p in updated_profits:
-                pickle.dump(p, file)
         return profit
 
     def delete(self, id: str) -> None:
