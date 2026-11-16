@@ -27,7 +27,7 @@ class ProfitController:
                     profit = pickle.load(file)
                     if id and profit.id == id:
                         return [profit]
-                    if name and profit.name == name:
+                    if name and name.lower() in profit.name.lower():
                         return [profit]
                     profits.append(profit)
                 except EOFError:
