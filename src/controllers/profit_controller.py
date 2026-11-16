@@ -10,6 +10,11 @@ FILE_DATA = file_name()
 
 class ProfitController:
     def create(self, profit: Profit) -> Profit:
+        existing_profits = self.read()
+
+        if any(p.name.lower() == profit.name.lower() for p in existing_profits):
+            raise ValueError(f"Profit with name {profit.name} already exists.")
+
         with open(FILE_DATA, "ab") as file:
             pickle.dump(profit, file)
         return profit
